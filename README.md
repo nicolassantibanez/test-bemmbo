@@ -2,6 +2,11 @@
 
 Bienvenido/a a la prueba técnica para la integración de facturas con un sistema ERP. Este repositorio contiene un entorno base creado con **React + Vite**, **Tailwind CSS** preconfigurado y soporte opcional para **TypeScript**.
 
+> 🧑‍💻 Este repo contiene dos ramas:
+>
+> - `master`: Proyecto base en **JavaScript**.
+> - `typescript`: Proyecto base en **TypeScript**, si decides tomar ese bonus.
+
 ---
 
 ## 🚀 ¿Cómo comenzar?
