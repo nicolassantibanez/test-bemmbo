@@ -21,7 +21,7 @@ import { useState } from "react";
 import Pagination from "./pagination";
 import Filters from "./filters";
 import { Button } from "../ui/shadcn/button";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { injectInvoices } from "@/api/invoices";
 
 type InvoiceTableProps = {
@@ -35,10 +35,26 @@ export default function InvoiceTable({
   invoices,
   isLoading = false,
 }: InvoiceTableProps) {
+  const queryClient = useQueryClient();
   const [rowSelection, setRowSelection] = useState({});
   const { mutate: injectInvoicesMutation } = useMutation({
     mutationFn: injectInvoices,
     retry: 3,
+    onSuccess: (_response, invoiceIds) => {
+      // Update the local state with the updated invoices
+      queryClient.setQueryData(["invoices"], (prevInvoices: Invoice[]) => {
+        return prevInvoices.map((invoice) => {
+          const updatedInvoice = invoiceIds.find(
+            (updatedId) => updatedId === invoice.id
+          );
+          return {
+            ...invoice,
+            injected: updatedInvoice !== undefined || invoice.injected,
+          };
+        });
+      });
+      setRowSelection({});
+    },
   });
 
   const handleInjectClick = () => {
