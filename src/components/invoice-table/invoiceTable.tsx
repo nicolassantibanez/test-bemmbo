@@ -29,6 +29,8 @@ type InvoiceTableProps = {
   isLoading?: boolean;
 };
 
+const BATCH_SIZE = 25;
+
 export default function InvoiceTable({
   invoices,
   isLoading = false,
@@ -36,6 +38,7 @@ export default function InvoiceTable({
   const [rowSelection, setRowSelection] = useState({});
   const { mutate: injectInvoicesMutation } = useMutation({
     mutationFn: injectInvoices,
+    retry: 3,
   });
 
   const handleInjectClick = () => {
@@ -45,8 +48,12 @@ export default function InvoiceTable({
     }
 
     const selectedInvoiceIds = selectedRows.map((row) => row.original.id);
-    console.log("selectedInvoiceIds", selectedInvoiceIds);
-    injectInvoicesMutation(selectedInvoiceIds);
+
+    // Process invoices in batches
+    for (let i = 0; i < selectedInvoiceIds.length; i += BATCH_SIZE) {
+      const batch = selectedInvoiceIds.slice(i, i + BATCH_SIZE);
+      injectInvoicesMutation(batch);
+    }
   };
 
   const table = useReactTable({
@@ -73,7 +80,7 @@ export default function InvoiceTable({
         <Filters table={table} />
         <Button onClick={handleInjectClick}>Inyectar</Button>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-md">
         <Table>
           <TableHeader className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -160,9 +167,19 @@ function InjectedBadge({ injected }: { injected: boolean }) {
 const columns: ColumnDef<Invoice>[] = [
   {
     id: "select",
-    accessorKey: "id",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
     cell: ({ row }) => (
       <Checkbox
+        disabled={row.original.injected}
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
