@@ -6,4 +6,11 @@ async function getInvoices(): Promise<Invoice[]> {
   return response.data;
 }
 
-export { getInvoices };
+async function injectInvoices(invoiceIds: string[]): Promise<Invoice[]> {
+  const response = await client.post("/invoices/inject", {
+    invoiceIds,
+  });
+  return response.data;
+}
+
+export { getInvoices, injectInvoices };
