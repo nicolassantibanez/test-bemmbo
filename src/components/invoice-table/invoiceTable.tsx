@@ -23,6 +23,7 @@ import Filters from "./filters";
 import { Button } from "../ui/shadcn/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { injectInvoices } from "@/api/invoices";
+import PreviewDialog from "./previewDialog";
 
 type InvoiceTableProps = {
   invoices: Invoice[];
@@ -37,6 +38,7 @@ export default function InvoiceTable({
 }: InvoiceTableProps) {
   const queryClient = useQueryClient();
   const [rowSelection, setRowSelection] = useState({});
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { mutate: injectInvoicesMutation } = useMutation({
     mutationFn: injectInvoices,
     retry: 3,
@@ -62,7 +64,11 @@ export default function InvoiceTable({
     if (selectedRows.length === 0) {
       return; // No rows selected
     }
+    setIsDialogOpen(true);
+  };
 
+  const handleConfirmInjection = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
     const selectedInvoiceIds = selectedRows.map((row) => row.original.id);
 
     // Process invoices in batches
@@ -70,6 +76,7 @@ export default function InvoiceTable({
       const batch = selectedInvoiceIds.slice(i, i + BATCH_SIZE);
       injectInvoicesMutation(batch);
     }
+    setIsDialogOpen(false);
   };
 
   const table = useReactTable({
@@ -94,7 +101,12 @@ export default function InvoiceTable({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Filters table={table} />
-        <Button onClick={handleInjectClick}>Inyectar</Button>
+        <Button
+          onClick={handleInjectClick}
+          disabled={Object.keys(rowSelection).length === 0}
+        >
+          Inyectar
+        </Button>
       </div>
       <div className="overflow-x-auto rounded-md">
         <Table>
@@ -156,6 +168,13 @@ export default function InvoiceTable({
         </Table>
       </div>
       <Pagination table={table} />
+
+      <PreviewDialog
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        table={table}
+        onConfirmation={handleConfirmInjection}
+      />
     </div>
   );
 }
@@ -183,16 +202,6 @@ function InjectedBadge({ injected }: { injected: boolean }) {
 const columns: ColumnDef<Invoice>[] = [
   {
     id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
     cell: ({ row }) => (
       <Checkbox
         disabled={row.original.injected}

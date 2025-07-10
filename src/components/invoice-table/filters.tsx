@@ -39,7 +39,7 @@ export default function Filters({ table }: { table: TableType<Invoice> }) {
             table.getColumn("currency")?.setFilterValue(filter);
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger id="currencies">
             <SelectValue placeholder="Seleccionar" />
           </SelectTrigger>
           <SelectContent>
@@ -61,7 +61,7 @@ export default function Filters({ table }: { table: TableType<Invoice> }) {
             table.getColumn("injected")?.setFilterValue(filter);
           }}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger id="injection" className="w-full">
             <SelectValue placeholder="Seleccionar" />
           </SelectTrigger>
           <SelectContent>
